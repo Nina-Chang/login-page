@@ -1,8 +1,8 @@
 # Page
 
-Pages/login Page 1
-Pages/users Page 2
-Pages/accounts Page 3
+*Pages/login Page 1
+*Pages/users Page 2
+*Pages/accounts Page 3
 
 # Getting Started with Create React App
 
