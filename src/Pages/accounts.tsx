@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import qs from 'qs';
-import { Table,Button } from 'antd';
+import { Table,Button, Pagination } from 'antd';
 import type { PaginationProps } from 'antd';
 import type { ColumnsType, TablePaginationConfig } from 'antd/es/table';
 import type { FilterValue, SorterResult } from 'antd/es/table/interface';
@@ -9,6 +9,7 @@ import LinkStyle from '../Common/LinkStyle';
 // import {test} from './login';
 import { tData } from './login';
 import {gql,GraphQLClient} from 'graphql-request';
+import { Content } from 'antd/es/layout/layout';
 
 interface DataType {
   key:React.Key;
@@ -114,8 +115,10 @@ const columns: ColumnsType<DataType> = [
 const Accounts: React.FC = () => {
   const [data, setData] = useState<DataType[]>();
   const dataContent: DataType[] = [];
-  const obj: DataType[] = [];
-  var pagetotal:any=0;
+  // const obj: DataType[] = [];
+  let [pagetotal,setPagetotal]=useState<number>();
+  let [currentPage,setCurrentPage]=useState<number>(1);
+  let [infoSize,setinfoSize]=useState<number>();
   // const [loading, setLoading] = useState(false);
   // const [tableParams, setTableParams] = useState<TableParams>({
   //   pagination: {
@@ -200,66 +203,62 @@ const Accounts: React.FC = () => {
     //   console.error();
     // })
     //用axios實作
-
+    
     // 用Graphql實作
-    const gData=gql`
-    query getAcc($page:Int){
-      getAccounts(query:{tagIds:[],page:{page:$page,size:10}}){
-        content{
-          accountName
-          countryName
-          accountOwner{
-            name
+    const query=(currenPg:number)=>{
+      const gData=gql`
+      query getAcc($params:AccountQuery){
+        getAccounts(query:$params){
+          content{
+            accountName
+            countryName
+            accountOwner{
+              name
+            }
+            lastUpdateTime
+            createTime
+            primaryContact{
+              email
+            }
+            status
           }
-          lastUpdateTime
-          createTime
-          primaryContact{
-            email
+          pageInfo{
+            totalPages
+            totalElements
+            numberOfElements
+            size
+            number
           }
-          status
         }
-        pageInfo{
-          totalPages
-          totalElements
-          numberOfElements
-          size
-          number
+    }
+    `
+      const client=new GraphQLClient('http://192.168.11.226:9095/graphql',{
+        headers:{
+          Authorization:`Bearer ${tData}`,
         }
-      }
-  }
-  `
-    const client=new GraphQLClient('http://192.168.11.226:9095/graphql',{
-      headers:{
-        Authorization:`Bearer ${tData}`,
-      }
-    });
-    for(let i=1;i<11;i++){
-      var variable={page:i};
+      });
+      var variable={
+        "params": {
+          "tagIds": [],
+          "page": {
+            "page": `${currenPg}`,
+            "size": 10
+          }
+        }
+      };
       client.request(gData,variable)
       .then(function(res:any){
-        // pagetotal=res.getAccounts.pageInfo.totalPages;
+        const element=res.getAccounts.pageInfo.totalElements;
+        setPagetotal(element);
+        const currentP=res.getAccounts.pageInfo.number;
+        setCurrentPage(currentP);
+        const infoSize=res.getAccounts.pageInfo.size;
+        setinfoSize(infoSize);
+  
         const info=res.getAccounts.content;
-        console.log(info);
-        // const infoArray: DataType[] = [];;
-        // for(let i=0;i<res.getAccounts.content.length;i++){
-        //   console.log(info[1].accountName);
-        //   const obj=Object.assign({},info[i],{key:i+1});
-        //   infoArray.splice(i,0,obj);
-        // }
-        // console.log(infoArray);
-        console.log(i);
-        var count:number=0;
-
-        for(let j=0;j<10;j++){
-          count++;
-          // if(count!==1){
-          //   count=0;
-          //   break;
-          // }
-          console.log(info.length);
-          
+        for(let j=0;j<res.getAccounts.pageInfo.numberOfElements;j++){
           dataContent.push({
-            key:j+(i-1)*10,
+            key:j,
             no:j+1,
             accountName:info[j].accountName,
             countryName:info[j].countryName,
@@ -269,18 +268,9 @@ const Accounts: React.FC = () => {
             primaryContact:info[j].primaryContact,
             status:info[j].status,
           });
-          console.log(dataContent);
-
-          // for()
-          // const dataContent=Object.assign({},obj[i],{key:i+1});
-
-        // console.log(dataContent);
         }
         // console.log(dataContent);
-        // const page=res.getAccounts.pageInfo.totalPages;
-
         setData(dataContent);
-
         // setLoading(false);
         // setTableParams({
         //   ...tableParams,
@@ -292,10 +282,12 @@ const Accounts: React.FC = () => {
       })
       .catch(console.error);
     }
+    query(currentPage);
     // 用Graphql實作
-  }, []);
+  }, [currentPage]);
   // JSON.stringify(tableParams)
 
+  
   // const handleTableChange =()=>(
   //   pagination: TablePaginationConfig,
   //   filters: Record<string, FilterValue>,
@@ -306,41 +298,17 @@ const Accounts: React.FC = () => {
   //     filters,
   //     ...sorter,
   //   });
-
+  
   //   // `dataSource` is useless since `pageSize` changed
   //   if (pagination.pageSize !== tableParams.pagination?.pageSize) {
   //     setData([]);
   //   }
   // };
-
-  // 用Graphql實作
-  const gPage=gql`
-    query getAcc{
-      getAccounts(query:{tagIds:[]}){
-        pageInfo{
-          totalPages
-          totalElements
-          numberOfElements
-          size
-          number
-        }
-      }
+  
+  const onPagechange: PaginationProps['onChange'] =(page:number,pageSize:number|undefined)=>{
+    setCurrentPage(page);
   }
-  `
-  const client2=new GraphQLClient('http://192.168.11.226:9095/graphql',{
-    headers:{
-      Authorization:`Bearer ${tData}`,
-    }
-  });
-  client2.request(gPage)
-      .then(function(res:any){
-        pagetotal=res.getAccounts.pageInfo.totalPages;
-        // console.log(pagetotal);
-      })
-      .catch(console.error)
-  // 用Graphql實作
-  // console.log(pagetotal);
-
+  
   const showTotal: PaginationProps['showTotal'] 
   = (total,range) => `當前項目${range[0]}-${range[1]},總共${total}項`;
   return (
@@ -355,16 +323,24 @@ const Accounts: React.FC = () => {
           columns={columns}
           dataSource={data}
           pagination={
-            {pageSize:10,
+            {
+              pageSize:infoSize,
               total:pagetotal,
-              showTotal:showTotal
+              current:currentPage,
+              showTotal:showTotal,
+              onChange:onPagechange
             }
           }
-          scroll={{x:1500}}
+          scroll={{x:1500,y:500}}
         />
     </div>
   );
+
 };
+
+
+
+
 
 
 export default Accounts;
