@@ -116,9 +116,11 @@ const Accounts: React.FC = () => {
   const [data, setData] = useState<DataType[]>();
   const dataContent: DataType[] = [];
   // const obj: DataType[] = [];
-  let [pagetotal,setPagetotal]=useState<number>();
+  let [pagetotal,setPagetotal]=useState<number>(0);
   let [currentPage,setCurrentPage]=useState<number>(1);
   let [infoSize,setinfoSize]=useState<number>();
+  let [pageofdata,setPageofdata]=useState<number>();
+
   // const [loading, setLoading] = useState(false);
   // const [tableParams, setTableParams] = useState<TableParams>({
   //   pagination: {
@@ -242,7 +244,7 @@ const Accounts: React.FC = () => {
           "tagIds": [],
           "page": {
             "page": `${currenPg}`,
-            "size": 10
+            "size": `${infoSize}`
           }
         }
       };
@@ -256,7 +258,9 @@ const Accounts: React.FC = () => {
         setinfoSize(infoSize);
   
         const info=res.getAccounts.content;
-        for(let j=0;j<res.getAccounts.pageInfo.numberOfElements;j++){
+        const pageofdata=res.getAccounts.pageInfo.numberOfElements;
+        setPageofdata(pageofdata);
+        for(let j=0;j<pageofdata;j++){
           dataContent.push({
             key:j,
             no:j+1,
@@ -284,7 +288,7 @@ const Accounts: React.FC = () => {
     }
     query(currentPage);
     // 用Graphql實作
-  }, [currentPage]);
+  }, [currentPage,pageofdata]);
   // JSON.stringify(tableParams)
 
   
@@ -305,8 +309,11 @@ const Accounts: React.FC = () => {
   //   }
   // };
   
-  const onPagechange: PaginationProps['onChange'] =(page:number,pageSize:number|undefined)=>{
+  let pageChange:number=0;
+  const onPagechange: PaginationProps['onChange'] =(page:number,pageSize:number)=>{
     setCurrentPage(page);
+
+    setinfoSize(pageSize);
   }
   
   const showTotal: PaginationProps['showTotal'] 
@@ -328,7 +335,8 @@ const Accounts: React.FC = () => {
               total:pagetotal,
               current:currentPage,
               showTotal:showTotal,
-              onChange:onPagechange
+              onChange:onPagechange,
+              showSizeChanger:true
             }
           }
           scroll={{x:1500,y:500}}
