@@ -4,6 +4,7 @@ import {Button,Space} from 'antd';
 import { styled } from "styled-components";
 import LinkStyle from "../Common/LinkStyle";
 import axios from 'axios';
+import { useNavigate } from "react-router-dom";
 
 const FlexBox=styled.div`
     display: flex;
@@ -20,20 +21,29 @@ const FlexBox=styled.div`
 // };
 
 var tData:string="";
-export function getToken(data:string){
+export function gtn(data:string){
     tData=data;
+    // console.log(tData);
     return data;
 }
-
 export {tData};
 
 // export const test='test231';
 
+// function getToken(data:string){
+//     return data;
+// }
 
-function Login(){
+interface loginProps{
+    setToken:React.Dispatch<React.SetStateAction<string>>;
+}
+
+// let token:string="";
+function Login(props:loginProps){
     const [AccValue,setAccValue]=useState("");
     const [PassValue,setPassValue]=useState("");
-    const [LoginOrNot,setLoginOrNot]=useState(false);   
+    const [LoginOrNot,setLoginOrNot]=useState(false); 
+    const navigate=useNavigate();
     
     const userData={
         query:`
@@ -49,22 +59,23 @@ function Login(){
           
         `
     };
-    function get(){
+    function login(){
         axios.post('http://192.168.11.226:9095/graphql',userData)
         .then(function(response){
             // console.log(response.data.data.login.token);
             if(response.data.data.login!==null){
                 setLoginOrNot(true);
-                const tokendata=response.data.data.login.token;
-                getToken(tokendata);
+        
+                props.setToken(response.data.data.login.token)
+                // console.log(token);
+                navigate('/users');
             }
         })
         .catch(function(response){
             setLoginOrNot(false);
         });
     }
-    get();
-
+    
     const handleAccChange=(e:React.ChangeEvent<HTMLInputElement>)=>{
         const value=e.target.value;
         setAccValue(value);
@@ -83,12 +94,8 @@ function Login(){
                 <span style={{width:"50%"}}>密碼:</span>
                 <Input type="password" placeholder="請輸入密碼" onChange={handlePassChange} value={PassValue} />
             </Space.Compact>
-            {LoginOrNot?
-            (<LinkStyle to="/users">
-            <Button style={{width:"120%",margin:"20px auto"}} >登入</Button>
-            </LinkStyle>)
-            :
-            (<Button style={{width:"15%",margin:"20px auto"}}>登入</Button>)}
+
+            <Button style={{width:"20%",margin:"20px auto"}} onClick={()=>{login()}} >登入</Button>
         </FlexBox>
         
     );

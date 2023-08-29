@@ -112,13 +112,12 @@ const columns: ColumnsType<DataType> = [
 // });
 
 
-const Accounts: React.FC = () => {
+function Accounts({token}:any) {
   const [data, setData] = useState<DataType[]>();
   const dataContent: DataType[] = [];
-  // const obj: DataType[] = [];
   let [pagetotal,setPagetotal]=useState<number>(0);
   let [currentPage,setCurrentPage]=useState<number>(1);
-  let [infoSize,setinfoSize]=useState<number>();
+  let [infoSize,setinfoSize]=useState<number>(10);
   let [pageofdata,setPageofdata]=useState<number>();
 
   // const [loading, setLoading] = useState(false);
@@ -150,7 +149,7 @@ const Accounts: React.FC = () => {
   //       });
   //     });
   // };
-
+  // console.log(token);
   useEffect(() => {
     // fetchData();
 
@@ -236,7 +235,7 @@ const Accounts: React.FC = () => {
     `
       const client=new GraphQLClient('http://192.168.11.226:9095/graphql',{
         headers:{
-          Authorization:`Bearer ${tData}`,
+          Authorization:`Bearer ${token}`
         }
       });
       var variable={
@@ -309,7 +308,6 @@ const Accounts: React.FC = () => {
   //   }
   // };
   
-  let pageChange:number=0;
   const onPagechange: PaginationProps['onChange'] =(page:number,pageSize:number)=>{
     setCurrentPage(page);
 

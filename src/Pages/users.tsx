@@ -1,6 +1,6 @@
-import React from "react";
+import React, { useEffect } from "react";
 import { useState } from "react";
-import { Button, Table } from 'antd';
+import { Button, Table ,Spin} from 'antd';
 import type { ColumnsType } from 'antd/es/table';
 import LinkStyle from "../Common/LinkStyle";
 import axios from 'axios';
@@ -51,8 +51,8 @@ import { tData } from './login';
 //     .catch(console.error);
 // 
 
-interface DataType{
-    key:React.Key;
+interface User{
+    key:number;
     id:number;
     name:string;
     email:string;
@@ -67,7 +67,7 @@ interface DataType{
 // }
 
 
-const columns: ColumnsType<DataType> = [
+const columns: ColumnsType<User> = [
 {
     title: 'Id',
     dataIndex: 'id',
@@ -103,34 +103,12 @@ const columns: ColumnsType<DataType> = [
 //     dataIndex: 'address',
 // },
 // ];
-const data: DataType[] = [];
+
 // const dataInfo=(resp:object)=>{
 //     // console.log(resp);
 //     return resp;
 // }
-axios
-.get("https://jsonplaceholder.typicode.com/users/",{
-    headers:{
-        Authorization:`Bearer ${tData}`
-    }
-})  
-.then(function (response) {
-        const {data:[...object]}=response;
-        // console.log(JSON.stringify(object[0].company.name));
-        // console.log(JSON.stringify(response));
-        for (let i = 0; i < 10; i++) {
-            data.push({
-                key: i,
-                id:i+1,
-                name:object[i].name,
-                email:object[i].email,
-                website:object[i].website,
-                company:object[i].company.name,
-            });
-            // dataInfo(data);
-        }
-    })
-.catch(console.error);
+
 
 
 // const data: DataType[] = [];
@@ -146,9 +124,49 @@ axios
 // console.log(data);
 // }
 
-const Users: React.FC = () => {
+function Users({token}:any) {
 const [selectedRowKeys, setSelectedRowKeys] = useState<React.Key[]>([]);
 const [loading, setLoading] = useState(false);
+const [dataSource,setDataSource]=useState<User[]>([]);
+const dataContent: User[] = [];
+
+useEffect(()=>{
+    try{
+        setLoading(true);
+        axios
+        .get("https://jsonplaceholder.typicode.com/users/",{
+            headers:{
+                Authorization:`Bearer ${token}`
+            }
+        })  
+        .then(function (response) {
+                const {data:[...object]}=response;
+                // console.log(JSON.stringify(object[0].company.name));
+                // console.log(JSON.stringify(response));
+                for (let i = 0; i < 10; i++) {
+                    dataContent.push({
+                        key:i,
+                        id:i+1,
+                        name:object[i].name,
+                        email:object[i].email,
+                        website:object[i].website,
+                        company:object[i].company.name,
+                    });
+                    // dataInfo(data);
+                }
+                // console.log(dataSource);
+                setDataSource(dataContent);
+                setLoading(false);
+            })
+        .catch(console.error);
+    }
+    catch(e){
+        setLoading(true);
+    }
+    finally{
+        setLoading(false);
+    }
+},[])
 
 const start = () => {
     setLoading(true);
@@ -176,6 +194,7 @@ return (
         {/* <Button type="primary" onClick={start} disabled={!hasSelected} loading={loading}>
         Reload
         </Button> */}
+        {loading ? '' : <Spin />}
         <LinkStyle to="/login">
             <Button>Reload</Button>
         </LinkStyle>
@@ -186,7 +205,11 @@ return (
         {hasSelected ? `Selected ${selectedRowKeys.length} items` : ''}
         </span>
     </div>
-    <Table rowSelection={rowSelection} columns={columns} dataSource={data} />
+    <Table 
+        // rowKey={(record:User) => record.id-1}
+        columns={columns} 
+        dataSource={dataSource} 
+    />
     </div>
 );
 };

@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import{Routes,Route}from "react-router-dom";
 import './App.css';
 import Login from './Pages/login';
@@ -6,13 +6,17 @@ import Users from './Pages/users';
 import Accounts from './Pages/accounts';
 
 function App() {
+  let [token,setToken]=useState<string>("");
+  const handleToken=(tkn:string)=>{
+    setToken(token);
+  }
   return (
     <div className="App">
       <Routes>
-          <Route path='/' element={<Login/>}/>
-          <Route path='/login' element={<Login/>}/>
-          <Route path="/users" element={<Users/>}/>
-          <Route path='/accounts' element={<Accounts/>}/>
+          <Route path='/' element={<Login setToken={setToken}/>}/>
+          <Route path='/login' element={<Login setToken={setToken}/>}/>
+          <Route path="/users" element={<Users token={token} handleToken={handleToken}/>}/>
+          <Route path='/accounts' element={<Accounts token={token}/>}/>
       </Routes>
     </div>
   );
