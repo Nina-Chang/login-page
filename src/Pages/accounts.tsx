@@ -7,12 +7,10 @@ import type { FilterValue, SorterResult } from 'antd/es/table/interface';
 import LinkStyle from '../Common/LinkStyle';
 // import axios from 'axios';
 // import {test} from './login';
-import { tData } from './login';
 import {gql,GraphQLClient} from 'graphql-request';
 import { Content } from 'antd/es/layout/layout';
 
-interface DataType {
-  key:React.Key;
+interface Account {
   no:number;
   accountName:String;
   countryName:String;
@@ -41,7 +39,7 @@ interface DataType {
 //   filters?: Record<string, FilterValue>;
 // }
 
-const columns: ColumnsType<DataType> = [
+const columns: ColumnsType<Account> = [
   {
     title: 'No',
     dataIndex: 'no',
@@ -111,10 +109,9 @@ const columns: ColumnsType<DataType> = [
 //   ...params,
 // });
 
-
 function Accounts({token}:any) {
-  const [data, setData] = useState<DataType[]>();
-  const dataContent: DataType[] = [];
+  const [data, setData] = useState<Account[]>();
+  const dataContent: Account[] = [];
   let [pagetotal,setPagetotal]=useState<number>(0);
   let [currentPage,setCurrentPage]=useState<number>(1);
   let [infoSize,setinfoSize]=useState<number>(10);
@@ -261,7 +258,6 @@ function Accounts({token}:any) {
         setPageofdata(pageofdata);
         for(let j=0;j<pageofdata;j++){
           dataContent.push({
-            key:j,
             no:j+1,
             accountName:info[j].accountName,
             countryName:info[j].countryName,
@@ -287,7 +283,7 @@ function Accounts({token}:any) {
     }
     query(currentPage);
     // 用Graphql實作
-  }, [currentPage,pageofdata]);
+  }, [currentPage,infoSize]);
   // JSON.stringify(tableParams)
 
   
@@ -325,6 +321,7 @@ function Accounts({token}:any) {
             <Button>log out</Button>
         </LinkStyle>
         <Table
+          rowKey={(record:Account)=>record.no-1}
           columns={columns}
           dataSource={data}
           pagination={
