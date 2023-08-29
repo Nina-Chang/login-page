@@ -4,7 +4,6 @@ import { Button, Table ,Spin} from 'antd';
 import type { ColumnsType } from 'antd/es/table';
 import LinkStyle from "../Common/LinkStyle";
 import axios from 'axios';
-import { tData } from './login';
 // import {GraphQLClient,gql}from "graphql-request";
 
 
@@ -52,7 +51,6 @@ import { tData } from './login';
 // 
 
 interface User{
-    key:number;
     id:number;
     name:string;
     email:string;
@@ -131,41 +129,36 @@ const [dataSource,setDataSource]=useState<User[]>([]);
 const dataContent: User[] = [];
 
 useEffect(()=>{
-    try{
-        setLoading(true);
-        axios
-        .get("https://jsonplaceholder.typicode.com/users/",{
-            headers:{
-                Authorization:`Bearer ${token}`
+    setLoading(true);
+    axios
+    .get("https://jsonplaceholder.typicode.com/users/",{
+        headers:{
+            Authorization:`Bearer ${token}`
+        }
+    })  
+    .then(function (response) {
+            const {data:[...object]}=response;
+            // console.log(JSON.stringify(object[0].company.name));
+            // console.log(JSON.stringify(response));
+            for (let i = 0; i < 10; i++) {
+                dataContent.push({
+                    id:i+1,
+                    name:object[i].name,
+                    email:object[i].email,
+                    website:object[i].website,
+                    company:object[i].company.name,
+                });
+                // dataInfo(data);
             }
-        })  
-        .then(function (response) {
-                const {data:[...object]}=response;
-                // console.log(JSON.stringify(object[0].company.name));
-                // console.log(JSON.stringify(response));
-                for (let i = 0; i < 10; i++) {
-                    dataContent.push({
-                        key:i,
-                        id:i+1,
-                        name:object[i].name,
-                        email:object[i].email,
-                        website:object[i].website,
-                        company:object[i].company.name,
-                    });
-                    // dataInfo(data);
-                }
-                // console.log(dataSource);
-                setDataSource(dataContent);
-                setLoading(false);
-            })
-        .catch(console.error);
-    }
-    catch(e){
-        setLoading(true);
-    }
-    finally{
+            // console.log(dataSource);
+            setDataSource(dataContent);
+        })
+    .catch(function(){
+        setLoading(true); 
+    })
+    .finally(function(){
         setLoading(false);
-    }
+    })
 },[])
 
 const start = () => {
@@ -194,7 +187,7 @@ return (
         {/* <Button type="primary" onClick={start} disabled={!hasSelected} loading={loading}>
         Reload
         </Button> */}
-        {loading ? '' : <Spin />}
+        <Spin spinning={loading}/>
         <LinkStyle to="/login">
             <Button>Reload</Button>
         </LinkStyle>
@@ -206,7 +199,7 @@ return (
         </span>
     </div>
     <Table 
-        // rowKey={(record:User) => record.id-1}
+        rowKey={(record:User) => record.id-1}
         columns={columns} 
         dataSource={dataSource} 
     />
