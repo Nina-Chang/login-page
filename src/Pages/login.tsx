@@ -1,11 +1,12 @@
-import React, { useState } from "react";
+import React, { useRef, useState } from "react";
 import { Input } from 'antd';
 import {Button,Space,notification} from 'antd';
 import { styled } from "styled-components";
-import LinkStyle from "../Common/LinkStyle";
 import axios from 'axios';
 import { useNavigate } from "react-router-dom";
 import type { NotificationPlacement } from 'antd/es/notification/interface';
+import {useDispatch} from 'react-redux'
+import { getTokenFromLogin} from "./slice";
 
 const FlexBox=styled.div`
     display: flex;
@@ -22,16 +23,19 @@ const FlexBox=styled.div`
 // };
 
 
-interface loginProps{
-    setToken:React.Dispatch<React.SetStateAction<string>>;
-}
 
-// let token:string="";
-function Login(props:loginProps){
+// interface loginProps{
+//     setToken:React.Dispatch<React.SetStateAction<string>>;
+// }
+
+function Login(){
     const [AccValue,setAccValue]=useState("");
     const [PassValue,setPassValue]=useState("");
+    const [gTFLogin,setgTFLogin]=useState<string>("2ef");
+    // let gTFLogin=useRef("");
     const navigate=useNavigate();
     const [api, contextHolder] = notification.useNotification();
+    const dispatch=useDispatch();
     
     const userData={
         query:`
@@ -50,10 +54,12 @@ function Login(props:loginProps){
     function login(){
         axios.post('http://192.168.11.226:9095/graphql',userData)
         .then(function(response){
-            // console.log(response.data);
-            if(response.data.data.login!==null){
-                props.setToken(response.data.data.login.token)
-                // console.log(token);
+            let tkn=response.data.data.login.token;
+            if(response.data.data.login!=null){
+                // props.setToken(response.data.data.login.token)
+                setgTFLogin(tkn);
+                // gTFLogin.current=tkn;
+                dispatch(getTokenFromLogin(tkn));
                 navigate('/users');
             }
             else{
@@ -61,9 +67,10 @@ function Login(props:loginProps){
             }
         })
         .catch(function(response){
+            console.error();
         });
     }
-    
+
     const handleAccChange=(e:React.ChangeEvent<HTMLInputElement>)=>{
         const value=e.target.value;
         setAccValue(value);

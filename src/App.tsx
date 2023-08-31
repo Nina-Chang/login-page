@@ -6,14 +6,13 @@ import Users from './Pages/users';
 import Accounts from './Pages/accounts';
 
 function App() {
-  let [token,setToken]=useState<string>("");
   return (
     <div className="App">
       <Routes>
-          <Route path='/' element={<Login setToken={setToken}/>}/>
-          <Route path='/login' element={<Login setToken={setToken}/>}/>
-          <Route path="/users" element={<Users token={token}/>}/>
-          <Route path='/accounts' element={<Accounts token={token}/>}/>
+          <Route path='/' element={<Login/>}/>
+          <Route path='/login' element={<Login/>}/>
+          <Route path="/users" element={<Users/>}/>
+          <Route path='/accounts' element={<Accounts/>}/>
       </Routes>
     </div>
   );

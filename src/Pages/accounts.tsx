@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
-import qs from 'qs';
-import { Table,Button, Pagination } from 'antd';
+import { Table,Button, Pagination,Space,Input } from 'antd';
 import type { PaginationProps } from 'antd';
+import {SearchOutlined} from '@ant-design/icons';
 import type { ColumnsType, TablePaginationConfig } from 'antd/es/table';
 import type { FilterValue, SorterResult } from 'antd/es/table/interface';
 import LinkStyle from '../Common/LinkStyle';
@@ -9,6 +9,8 @@ import LinkStyle from '../Common/LinkStyle';
 // import {test} from './login';
 import {gql,GraphQLClient} from 'graphql-request';
 import { Content } from 'antd/es/layout/layout';
+import {useSelector} from 'react-redux'
+import { setToken } from './slice';
 
 interface Account {
   no:number;
@@ -109,13 +111,17 @@ const columns: ColumnsType<Account> = [
 //   ...params,
 // });
 
-function Accounts({token}:any) {
+function Accounts() {
+  const [AccNameValue,setAccNameValue]=useState("");
+  const [searchClick,setSearchClick]=useState(false);
   const [data, setData] = useState<Account[]>();
   const dataContent: Account[] = [];
   let [pagetotal,setPagetotal]=useState<number>(0);
   let [currentPage,setCurrentPage]=useState<number>(1);
   let [infoSize,setinfoSize]=useState<number>(10);
   let [pageofdata,setPageofdata]=useState<number>();
+
+  const getToken=useSelector(setToken);
 
   // const [loading, setLoading] = useState(false);
   // const [tableParams, setTableParams] = useState<TableParams>({
@@ -153,8 +159,8 @@ function Accounts({token}:any) {
     //用axios實作
     // const AccData={
     //   query:`
-    //   query getAcc{
-    //     getAccounts(query:{tagIds:[]}){
+    //   query getAcc($params:AccountQuery){
+    //     getAccounts(query:$params){
     //       content{
     //         accountName
     //         countryName
@@ -176,12 +182,12 @@ function Accounts({token}:any) {
     //         number
     //       }
     //     }
-    //   }
+    // }
     //   `
     // }
     // axios.post('http://192.168.11.226:9095/graphql',AccData,{
     //   headers:{
-    //     Authorization:`Bearer ${tData}`
+    //     Authorization:`Bearer ${getToken}`
     //   }
     // })
     // .then(function(response){
@@ -204,7 +210,7 @@ function Accounts({token}:any) {
     
     // 用Graphql實作
     const query=(currenPg:number)=>{
-      const gData=gql`
+      const getData=gql`
       query getAcc($params:AccountQuery){
         getAccounts(query:$params){
           content{
@@ -232,7 +238,7 @@ function Accounts({token}:any) {
     `
       const client=new GraphQLClient('http://192.168.11.226:9095/graphql',{
         headers:{
-          Authorization:`Bearer ${token}`
+          Authorization:`Bearer ${getToken}`
         }
       });
       var variable={
@@ -244,7 +250,7 @@ function Accounts({token}:any) {
           }
         }
       };
-      client.request(gData,variable)
+      client.request(getData,variable)
       .then(function(res:any){
         const element=res.getAccounts.pageInfo.totalElements;
         setPagetotal(element);
@@ -283,9 +289,83 @@ function Accounts({token}:any) {
     }
     query(currentPage);
     // 用Graphql實作
-  }, [currentPage,infoSize]);
+  }, [currentPage]);
   // JSON.stringify(tableParams)
 
+  useEffect(() => {   
+    // 用Graphql實作
+    const query=(currenPg:number)=>{
+      const getData=gql`
+      query getAcc($params:AccountQuery){
+        getAccounts(query:$params){
+          content{
+            accountName
+            countryName
+            accountOwner{
+              name
+            }
+            lastUpdateTime
+            createTime
+            primaryContact{
+              email
+            }
+            status
+          }
+          pageInfo{
+            totalPages
+            totalElements
+            numberOfElements
+            size
+            number
+          }
+        }
+    }
+    `
+      const client=new GraphQLClient('http://192.168.11.226:9095/graphql',{
+        headers:{
+          Authorization:`Bearer ${getToken}`
+        }
+      });
+      var variable={
+        "params": {
+          "tagIds": [],
+          "page": {
+            "page": `${currenPg}`,
+            "size": `${infoSize}`
+          }
+        }
+      };
+      client.request(getData,variable)
+      .then(function(res:any){
+        const element=res.getAccounts.pageInfo.totalElements;
+        setPagetotal(element);
+        const currentP=res.getAccounts.pageInfo.number;
+        setCurrentPage(currentP);
+        const infoSize=res.getAccounts.pageInfo.size;
+        setinfoSize(infoSize);
+  
+        const info=res.getAccounts.content;
+        const pageofdata=res.getAccounts.pageInfo.numberOfElements;
+        setPageofdata(pageofdata);
+        for(let j=0;j<pageofdata;j++){
+          dataContent.push({
+            no:j+1,
+            accountName:info[j].accountName,
+            countryName:info[j].countryName,
+            accountOwner:info[j].accountOwner,
+            lastUpdateTime:info[j].lastUpdateTime,
+            createTime:info[j].createTime,
+            primaryContact:info[j].primaryContact,
+            status:info[j].status,
+          });
+        }
+        setData(dataContent);
+      })
+      .catch(console.error);
+    }
+    query(1);
+    // 用Graphql實作
+  }, [infoSize]);
   
   // const handleTableChange =()=>(
   //   pagination: TablePaginationConfig,
@@ -303,10 +383,93 @@ function Accounts({token}:any) {
   //     setData([]);
   //   }
   // };
+
+  useEffect(()=>{
+    const queryByName=()=>{
+      const getData=gql`
+      query getAcc($params:AccountQuery){
+        getAccounts(query:$params){
+          content{
+            accountName
+            countryName
+            accountOwner{
+              name
+            }
+            lastUpdateTime
+            createTime
+            primaryContact{
+              email
+            }
+            status
+          }
+          pageInfo{
+            totalPages
+            totalElements
+            numberOfElements
+            size
+            number
+          }
+        }
+    }
+    `
+      const client=new GraphQLClient('http://192.168.11.226:9095/graphql',{
+        headers:{
+          Authorization:`Bearer ${getToken}`
+        }
+      });
+      var variable={
+        "params": {
+          "tagIds": [],
+          "page": {
+            "page": 1,
+            "size": 10
+          },
+          "accountName": `${AccNameValue}`
+        }
+      };
+      client.request(getData,variable)
+      .then(function(res:any){
+        const element=res.getAccounts.pageInfo.totalElements;
+        setPagetotal(element);
+        const currentP=res.getAccounts.pageInfo.number;
+        setCurrentPage(currentP);
+        const infoSize=res.getAccounts.pageInfo.size;
+        setinfoSize(infoSize);
   
+        const info=res.getAccounts.content;
+        const pageofdata=res.getAccounts.pageInfo.numberOfElements;
+        setPageofdata(pageofdata);
+        for(let j=0;j<pageofdata;j++){
+          dataContent.push({
+            no:j+1,
+            accountName:info[j].accountName,
+            countryName:info[j].countryName,
+            accountOwner:info[j].accountOwner,
+            lastUpdateTime:info[j].lastUpdateTime,
+            createTime:info[j].createTime,
+            primaryContact:info[j].primaryContact,
+            status:info[j].status,
+          });
+        }
+        setData(dataContent);
+      })
+      .catch(console.error);
+    }
+    queryByName();
+  },[searchClick])
+
+  const search=()=>{
+    let toggle=!searchClick
+    setSearchClick(toggle);
+  }
+
+  const handleAccNameChange=(e:React.ChangeEvent<HTMLInputElement>)=>{
+    const value=e.target.value;
+    setAccNameValue(value);
+}
+
   const onPagechange: PaginationProps['onChange'] =(page:number,pageSize:number)=>{
     setCurrentPage(page);
-
     setinfoSize(pageSize);
   }
   
@@ -314,6 +477,12 @@ function Accounts({token}:any) {
   = (total,range) => `當前項目${range[0]}-${range[1]},總共${total}項`;
   return (
     <div>
+        <Space.Compact size="large" style={{display:"float",float:"left"}}>
+          <Input addonBefore="Account Name" placeholder="Account Name" onChange={handleAccNameChange} value={AccNameValue}/>
+          <Button type="primary" icon={<SearchOutlined/>} onClick={search}>
+            Search
+          </Button>
+        </Space.Compact>
         <LinkStyle to="/users">
             <Button>Users</Button>
         </LinkStyle>
@@ -331,7 +500,7 @@ function Accounts({token}:any) {
               current:currentPage,
               showTotal:showTotal,
               onChange:onPagechange,
-              showSizeChanger:true
+              showSizeChanger:true,
             }
           }
           scroll={{x:1500,y:500}}

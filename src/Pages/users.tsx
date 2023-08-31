@@ -122,7 +122,7 @@ const columns: ColumnsType<User> = [
 // console.log(data);
 // }
 
-function Users({token}:any) {
+function Users() {
 const [selectedRowKeys, setSelectedRowKeys] = useState<React.Key[]>([]);
 const [loading, setLoading] = useState(false);
 const [dataSource,setDataSource]=useState<User[]>([]);
@@ -131,11 +131,7 @@ const dataContent: User[] = [];
 useEffect(()=>{
     setLoading(true);
     axios
-    .get("https://jsonplaceholder.typicode.com/users/",{
-        headers:{
-            Authorization:`Bearer ${token}`
-        }
-    })  
+    .get("https://jsonplaceholder.typicode.com/users/")  
     .then(function (response) {
             const {data:[...object]}=response;
             // console.log(JSON.stringify(object[0].company.name));
@@ -148,9 +144,7 @@ useEffect(()=>{
                     website:object[i].website,
                     company:object[i].company.name,
                 });
-                // dataInfo(data);
             }
-            // console.log(dataSource);
             setDataSource(dataContent);
         })
     .catch(function(){
